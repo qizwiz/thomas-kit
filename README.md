@@ -16,26 +16,36 @@ one line to your shell profile -- ~/.zshrc (zsh), ~/.bashrc (bash on Linux), on 
 ~/.bash_profile, ~/.bash_login or ~/.profile that exists (else a new ~/.bash_profile), or ~/.profile for other
 shells -- marked "# added by the Thomas installer" so you can find and delete it. fish, csh and tcsh users get the
 command to run instead. `./install.sh` from the tarball does neither.
-The Claude brain also needs your own Claude login, on a PAID account: Claude Code needs a Pro, Max, Team or
-Enterprise plan, or a Claude Console account (platform.claude.com, billed by API usage); the free claude.ai plan
-does not include it.
-Install Claude Code (https://claude.com/claude-code) and run `claude auth login`, or set ANTHROPIC_API_KEY.
+The Claude brain also needs your own Claude login, on a PAID account: a Pro, Max, Team or Enterprise plan, or a
+Claude Console account (platform.claude.com, billed by API usage); the free claude.ai plan does not include it.
+You do not need to install anything else for that: the installer already brought Claude Code's sign-in along, and
+`thomas login` opens it in your browser (on a computer without one, it prints a link to open on your phone and a code
+to paste back). Or set ANTHROPIC_API_KEY to a Console key.
 
 Works on macOS and Linux. On Windows, run it inside WSL (it looks like Linux to the installer; not yet tested there).
 
 ## First steps
 
+    thomas login                                    # sign in with your own paid Claude account (once)
     thomas persona set :name Ada                    # name your assistant
     thomas persona set :personality "warm, brief"
-    claude auth login                               # your own login (needs Claude Code) -- Thomas never ships one
     thomas chat                                     # talk back and forth; an empty line ends it
     thomas ask "hello, who are you?"                # one message (or the full path the installer printed)
     thomas remember "I'm vegetarian"                # a note every answer should know
     thomas forget                                   # delete the kept conversation
+    thomas telegram setup                           # text it from your phone -- see the next section
 
 ## From your phone (Telegram)
 
-    thomas telegram setup       # paste the token of a bot you made with @BotFather (it is not shown)
+Text your assistant from anywhere. First make your own Telegram bot (about two minutes, on your phone):
+
+1. In Telegram, search for **@BotFather** (the blue check mark) and open the chat.
+2. Send `/newbot`. Give it any name, then a username that ends in `bot` (for example `ada_helper_bot`).
+3. BotFather replies with a long token. Copy it -- it is the bot's password, so keep it to yourself.
+
+Then, on your computer:
+
+    thomas telegram setup       # paste that token (it is not shown on screen)
     thomas telegram run         # prints a code; send "/pair CODE" to your bot from your phone
     thomas telegram install     # then keep it answering in the background, also after you log in again
 

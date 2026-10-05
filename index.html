@@ -132,9 +132,10 @@ footer a{color:var(--paper)}
     <p><strong>You need a paid Claude account.</strong> The Claude brain runs on Claude Code, which needs a Pro,
       Max, Team or Enterprise plan, or a Claude Console account, billed by API usage; the free claude.ai plan does
       not include it. Get one at <a href="https://claude.ai">claude.ai</a> (or
-      <a href="https://platform.claude.com">platform.claude.com</a>), install
-      <a href="https://claude.com/claude-code">Claude Code</a>, then run <code>claude auth login</code> and sign in
-      in the browser it opens, or set <code>ANTHROPIC_API_KEY</code>.</p>
+      <a href="https://platform.claude.com">platform.claude.com</a>). You do not need to install anything else for the sign-in: the installer
+      brings Claude Code's sign-in along, and <code>thomas login</code> opens it in your browser (on a computer
+      without one, it prints a link to open on your phone and a code to paste back). Or set
+      <code>ANTHROPIC_API_KEY</code>.</p>
     <p><strong>Works on</strong> macOS and Linux. Windows: run it inside WSL, which looks like Linux to the
       installer; we have not tested it there yet.</p>
     <p><strong>Read <a href="install">the installer</a> before you run it.</strong></p>
@@ -158,9 +159,9 @@ footer a{color:var(--paper)}
   <div class="row">
     <section class="panel l" aria-labelledby="h-design">
       <h2 id="h-design">Who it is.<br>Your call.</h2>
-      <pre class="cmds"><code>thomas persona set :name Ada
+      <pre class="cmds"><code>thomas login           <b># your login, never ours</b>
+thomas persona set :name Ada
 thomas persona set :personality <b>"warm, brief"</b>
-claude auth login      <b># your login, never ours</b>
 thomas chat            <b># talk; it remembers</b>
 thomas remember <b>"I'm vegetarian"</b></code></pre>
       <p>Name, pronouns, voice, personality. One file: <code>~/.thomas/thomas.sexpr</code>. It remembers your recent
@@ -176,7 +177,11 @@ thomas remember <b>"I'm vegetarian"</b></code></pre>
 
   <section class="panel" aria-labelledby="h-phone">
     <h2 id="h-phone">From your <em>phone.</em></h2>
-    <pre class="cmds"><code>thomas telegram setup      <b># a bot you made with @BotFather</b>
+    <p>Text your assistant from anywhere. First make your own Telegram bot (about two minutes, on your phone): in
+      Telegram, search for <strong>@BotFather</strong> (the blue check mark), send <code>/newbot</code>, give it any
+      name and then a username that ends in <code>bot</code>. BotFather replies with a long token -- the bot's
+      password, so keep it to yourself. Then, on your computer:</p>
+    <pre class="cmds"><code>thomas telegram setup      <b># paste that token (it is not shown)</b>
 thomas telegram run        <b># send /pair CODE to it from your phone</b>
 thomas telegram install    <b># keep it answering in the background</b></code></pre>
     <p>Only the chat that sent the code reaches your assistant; other people's private chats are told it is private, and
