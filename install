@@ -29,11 +29,28 @@ main() {
     echo "$DEST exists and is not a Thomas install -- refusing to replace it. Set THOMAS_HOME to an empty folder."
     exit 1
   fi
-  case "$DEST" in "$HOME/.thomas" | "$HOME/.thomas/"*)
+  # the settings guard compares RESOLVED paths: `.`, `..` and a symlinked parent resolve first (audit 11:
+  # $HOME/.local/../.thomas passed a plain string match). A ./.. path whose folder does not exist yet cannot be
+  # resolved, so it is refused rather than guessed. DEST itself stays as given for every other check.
+  case "$DEST" in */./* | */. | */../* | */..) dots=yes ;; *) dots=no ;; esac
+  parent=$(dirname "$DEST")
+  if [ -d "$parent" ]; then
+    canon="$(cd -P "$parent" && pwd -P)/$(basename "$DEST")"
+    case "$canon" in */. | */..) canon=$(cd -P "$canon" && pwd -P) ;; esac
+  elif [ "$dots" = yes ]; then
+    echo "$DEST contains . or .. and its folder does not exist yet -- give a plain path. Nothing was installed."
+    exit 1
+  else
+    canon="$DEST"
+  fi
+  homec=$(cd -P "$HOME" 2>/dev/null && pwd -P) || homec="$HOME"
+  case "$canon" in "$homec/.thomas" | "$homec/.thomas/"* | "$HOME/.thomas" | "$HOME/.thomas/"*)
     echo "$DEST is where Thomas keeps your settings -- install somewhere else. Nothing was installed."; exit 1 ;;
   esac
-  if [ -L "$HOME/.local/bin" ] || { [ -e "$HOME/.local/bin" ] && [ ! -d "$HOME/.local/bin" ]; }; then
-    echo "$HOME/.local/bin exists and is not a folder -- move it aside and run this again. Nothing was installed."
+  # a link to a folder is fine (dotfile setups do this; -d follows it); a broken link or a non-folder is not
+  if { [ -L "$HOME/.local/bin" ] && [ ! -e "$HOME/.local/bin" ]; } \
+    || { [ -e "$HOME/.local/bin" ] && [ ! -d "$HOME/.local/bin" ]; }; then
+    echo "$HOME/.local/bin is a broken link or not a folder -- fix it and run this again. Nothing was installed."
     exit 1
   fi
   if command -v sha256sum >/dev/null 2>&1; then sha() { sha256sum "$1" | cut -d' ' -f1; }
@@ -62,7 +79,7 @@ main() {
     echo
     if [ "$restored" = yes ]; then echo "Interrupted. Your previous install was put back."
     elif [ -n "$old" ] && [ -d "$old/thomas" ]; then echo "Interrupted. Your previous install is safe in $old/thomas."
-    else echo "Interrupted. Nothing of yours was changed."; fi
+    else echo "Interrupted. Nothing was installed here (if setup had reached the adapter, npm's global copy stays)."; fi
     exit 130
   }
   cleanup() {
@@ -109,14 +126,18 @@ main() {
     elif [ -n "$old" ] && [ -d "$old/thomas" ]; then
       echo "Setup did not finish. Your previous install is safe in $old/thomas."
     else
-      echo "Setup did not finish. The new files were removed; nothing was installed."
+      echo "Setup did not finish. The new files were removed; nothing was installed here."
+      echo "  (if setup had reached the brain adapter, the copy npm installed globally stays)"
     fi
     exit 1
   fi
   # committed: the new install is set up, so finish (drop the old copy, link) without stopping halfway
   trap '' INT TERM HUP QUIT
-  rm -rf "$old"
-  mkdir -p "$HOME/.local/bin"
+  rm -rf "$old" || echo "Note: the previous install could not be fully removed from $old -- delete it by hand."
+  if ! mkdir -p "$HOME/.local/bin"; then
+    echo "Installed in $DEST, but $HOME/.local/bin could not be created: run $DEST/thomas directly."
+    exit 0
+  fi
   # create ~/.local/bin/thomas only if nothing is there; never replace another link or file
   link="$HOME/.local/bin/thomas"
   if [ ! -e "$link" ] && [ ! -L "$link" ]; then
