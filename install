@@ -79,7 +79,7 @@ main() {
     echo
     if [ "$restored" = yes ]; then echo "Interrupted. Your previous install was put back."
     elif [ -n "$old" ] && [ -d "$old/thomas" ]; then echo "Interrupted. Your previous install is safe in $old/thomas."
-    else echo "Interrupted. Nothing was installed here (if setup had reached the adapter, npm's global copy stays)."; fi
+    else echo "Interrupted. Nothing was installed (Node and the adapter live inside the Thomas folder, removed too)."; fi
     exit 130
   }
   cleanup() {
@@ -118,6 +118,13 @@ main() {
   old=$(mktemp -d "$(dirname "$DEST")/.thomas-old.XXXXXX")
   if [ -d "$DEST" ]; then mv "$DEST" "$old/thomas"; fi
   if mv "$new/thomas" "$DEST"; then placed=yes; fi
+  # an upgrade keeps the Node and adapter the last install fetched (copied, so a rollback still restores the old
+  # install whole); install.sh skips what is already there
+  if [ "$placed" = yes ] && [ -d "$old/thomas" ]; then
+    for keep in node adapter; do
+      if [ -d "$old/thomas/$keep" ]; then cp -Rp "$old/thomas/$keep" "$DEST/$keep" 2>/dev/null || rm -rf "${DEST:?}/$keep"; fi
+    done
+  fi
   trap interrupted INT TERM HUP QUIT
   if [ "$placed" = no ] || ! "$DEST/install.sh"; then
     rollback
@@ -126,8 +133,7 @@ main() {
     elif [ -n "$old" ] && [ -d "$old/thomas" ]; then
       echo "Setup did not finish. Your previous install is safe in $old/thomas."
     else
-      echo "Setup did not finish. The new files were removed; nothing was installed here."
-      echo "  (if setup had reached the brain adapter, the copy npm installed globally stays)"
+      echo "Setup did not finish. The new files were removed; nothing was installed."
     fi
     exit 1
   fi

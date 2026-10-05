@@ -8,8 +8,9 @@ Your own assistant: one brain (Claude, Codex or Gemini), one persona you design,
 
 or, from the tarball: `tar xzf thomas-kit.tgz && cd thomas && ./install.sh`
 
-`install.sh` makes a private Python environment in this folder, installs the brain adapter if Node 22+ is
-present (with `npm install -g`), and runs `thomas doctor`, which names anything still missing and the exact fix.
+`install.sh` makes a private Python environment in this folder, installs the Claude brain adapter into this folder
+(fetching Node 22 here too if you do not have it -- no admin rights needed), and runs `thomas doctor`, which names
+anything still missing and the exact fix.
 The Claude brain also needs your own Claude login: install Claude Code (https://claude.com/claude-code) and run
 `claude auth login`, or set ANTHROPIC_API_KEY.
 
