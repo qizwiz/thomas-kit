@@ -155,15 +155,41 @@ main() {
     case ":$PATH:" in
       *":$HOME/.local/bin:"*) ;;
       *)
+        # ADD the line, don't just print it: a first-time tester typed the full path for every question ("I paste a
+        # giant line every time", persona trial 2026-10-05) because nobody runs a printed PATH command. One line,
+        # marked, added once; removing it is deleting that line.
         case "${SHELL:-}" in
-          */fish) echo "Add it to your PATH:  fish_add_path ~/.local/bin" ;;
-          */zsh) echo "Add it to your PATH:  echo 'export PATH=\$HOME/.local/bin:\$PATH' >> \"$HOME/.zshrc\"   (then open a new terminal)" ;;
+          */fish | */csh | */tcsh) rc="" ;;
+          */zsh) rc="${ZDOTDIR:-$HOME}/.zshrc" ;;
           */bash)
-            # macOS Terminal starts bash as a login shell, which reads ~/.bash_profile rather than ~/.bashrc
-            if [ "$(uname)" = Darwin ]; then rc="$HOME/.bash_profile"; else rc="$HOME/.bashrc"; fi
-            echo "Add it to your PATH:  echo 'export PATH=\$HOME/.local/bin:\$PATH' >> \"$rc\"   (then open a new terminal)" ;;
-          *) echo "Add it to your PATH:  echo 'export PATH=\$HOME/.local/bin:\$PATH' >> \"$HOME/.profile\"   (then open a new terminal)" ;;
+            if [ "$(uname)" = Darwin ]; then
+              # macOS Terminal starts bash as a LOGIN shell, which reads only the FIRST of these that exists --
+              # so append to that one; creating ~/.bash_profile beside an existing ~/.profile would silently stop
+              # bash reading the user's ~/.profile (pre-publish audit, reproduced 2026-10-05)
+              rc="$HOME/.bash_profile"
+              for f in "$HOME/.bash_profile" "$HOME/.bash_login" "$HOME/.profile"; do
+                if [ -e "$f" ]; then rc="$f"; break; fi
+              done
+            else
+              rc="$HOME/.bashrc"
+            fi
+            ;;
+          *) rc="$HOME/.profile" ;;
         esac
+        mark="# added by the Thomas installer"
+        if [ -z "$rc" ]; then
+          case "${SHELL:-}" in
+            */fish) echo "Add it to your PATH:  fish_add_path ~/.local/bin" ;;
+            *) echo "Add it to your PATH:  set path = (~/.local/bin \$path)   (in ~/.cshrc or ~/.tcshrc)" ;;
+          esac
+        elif [ -f "$rc" ] && grep -qF "$mark" "$rc"; then
+          echo "Your PATH line is already in $rc. Open a new terminal, then just type:  thomas ask \"hello\""
+        elif printf '\n%s  %s\n' 'export PATH="$HOME/.local/bin:$PATH"' "$mark" >> "$rc"; then
+          echo "Added ~/.local/bin to your PATH in $rc (one line, marked \"$mark\")."
+          echo "Open a new terminal, then just type:  thomas ask \"hello\""
+        else
+          echo "Could not write $rc. Add it to your PATH yourself:  export PATH=\"\$HOME/.local/bin:\$PATH\""
+        fi
         ;;
     esac
   else

@@ -125,8 +125,9 @@ footer a{color:var(--paper)}
     <p><strong>Where to paste it:</strong> a terminal, the text window where you type commands. On a Mac press
       <kbd>⌘</kbd>+<kbd>Space</kbd>, type <code>Terminal</code> and press Return; on Linux open the app called
       Terminal. Click <em>Copy</em> above, paste into that window, and press Return.</p>
-    <p>It installs Thomas in your home folder, then checks that everything it needs is there and tells you how to
-      fix anything missing. Needs Python&nbsp;3.10+. The installer itself needs no admin rights (on Debian or Ubuntu
+    <p>It installs Thomas in your home folder, adds one marked line to your shell profile if needed so a new
+      terminal knows the <code>thomas</code> command, then checks that everything it needs is there and tells you how to fix
+      anything missing. Needs Python&nbsp;3.10+. The installer itself needs no admin rights (on Debian or Ubuntu
       you may first need <code>sudo apt install python3-venv</code>).</p>
     <p><strong>You need a paid Claude account.</strong> The Claude brain runs on Claude Code, which needs a Pro,
       Max, Team or Enterprise plan, or a Claude Console account, billed by API usage; the free claude.ai plan does
@@ -141,7 +142,13 @@ footer a{color:var(--paper)}
       <summary>Details: what it does, and what the checksum does and does not prove</summary>
       <p>It downloads the kit, checks its SHA-256 against the <a href="thomas-kit.tgz.sha256">published checksum</a>,
         installs into <code>~/.local/share/thomas</code>, links <code>~/.local/bin/thomas</code> if nothing is there,
-        and runs <code>thomas doctor</code>, which names anything still missing and the exact fix. For the Claude
+        and, only if <code>~/.local/bin</code> is not already on your PATH, adds
+        <code>export PATH="$HOME/.local/bin:$PATH"</code> once to your shell profile -- <code>~/.zshrc</code> (zsh),
+        <code>~/.bashrc</code> (bash on Linux), on macOS bash the first of <code>~/.bash_profile</code>,
+        <code>~/.bash_login</code> or <code>~/.profile</code> that exists, or <code>~/.profile</code> for other
+        shells -- marked <code># added by the Thomas installer</code> so you can find and delete it (fish, csh and
+        tcsh users get the command to run instead). Then it runs <code>thomas doctor</code>, which names anything
+        still missing and the exact fix. For the Claude
         brain it puts the adapter in its own folder, fetching Node&nbsp;22 there too if you do not have it.</p>
       <p>The checksum catches a corrupted download; it does not protect against a compromised host, since both files
         come from the same place.</p>
@@ -154,8 +161,10 @@ footer a{color:var(--paper)}
       <pre class="cmds"><code>thomas persona set :name Ada
 thomas persona set :personality <b>"warm, brief"</b>
 claude auth login      <b># your login, never ours</b>
-thomas ask <b>"hello, who are you?"</b></code></pre>
-      <p>Name, pronouns, voice, personality. One file: <code>~/.thomas/thomas.sexpr</code>.</p>
+thomas chat            <b># talk; it remembers</b>
+thomas remember <b>"I'm vegetarian"</b></code></pre>
+      <p>Name, pronouns, voice, personality. One file: <code>~/.thomas/thomas.sexpr</code>. It remembers your recent
+        turns and your notes between messages; <code>thomas forget</code> clears the conversation.</p>
     </section>
     <section class="panel r dark" aria-labelledby="h-brain">
       <span class="sfx" aria-hidden="true">Snap!</span>
@@ -173,7 +182,9 @@ thomas ask <b>"hello, who are you?"</b></code></pre>
       refuses every request it is asked to approve: reading, writing or running anything. Claude may still run a
       few read-only commands such as <code>whoami</code> and <code>pwd</code> without asking, so what reaches the
       provider includes your prompt, your persona settings, your account name and a temporary folder path, along
-      with what Claude itself sends (such as your platform and the date).</p>
+      with what Claude itself sends (such as your platform and the date). So that it remembers you, each message
+      also carries your recent turns and your notes, kept in two files under <code>~/.thomas</code> that Thomas
+      creates readable only by your user account; <code>(memory :keep nil)</code> stops keeping and sending them; files already written stay until you delete them.</p>
     <p>Codex and Gemini read files outside that folder even in their asking modes, so Thomas runs them only after
       you turn autonomy on. Reading another app's stored key is off unless you turn it on.</p>
   </section>
