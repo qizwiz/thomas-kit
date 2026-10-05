@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thomas</title>
+<meta name="description" content="Your own assistant: one brain, one persona you design, running on your machine.">
+<style>
+/* Noir, single-theme on purpose: black ink, white paper, one red. System faces only -- this page makes no
+   third-party request, because it is selling privacy. */
+:root{
+  --ink:#0b0b0c; --paper:#f4f2ee; --red:#d22a1f; --dim:#9a958d;
+  --slash:clamp(28px,6vw,64px); --gutter:10px;
+  --letter:Impact,"Haettenschweiler","Arial Narrow Bold","Franklin Gothic Bold",sans-serif-condensed,sans-serif;
+  --type:"Courier New",Courier,"Nimbus Mono PS",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:17px/1.55 var(--type);
+  padding-inline:16px;padding-block:24px 48px}
+.page{min-width:0;max-width:68rem;margin:0 auto;display:flex;flex-direction:column;gap:var(--gutter)}
+
+/* PANELS: every edge between panels is a slash; the black ground showing through is the gutter. */
+.panel{min-width:0;position:relative;padding:clamp(28px,5vw,56px);background:var(--paper);color:var(--ink);overflow:hidden}
+.cut-b{clip-path:polygon(0 0,100% 0,100% calc(100% - var(--slash)),0 100%);padding-bottom:calc(var(--slash) + 28px)}
+.cut-t{clip-path:polygon(0 var(--slash),100% 0,100% 100%,0 100%);padding-top:calc(var(--slash) + 28px);
+  margin-top:calc(var(--slash) * -1 + var(--gutter))}
+.cut-tb{clip-path:polygon(0 var(--slash),100% 0,100% calc(100% - var(--slash)),0 100%);
+  padding-block:calc(var(--slash) + 28px);margin-top:calc(var(--slash) * -1 + var(--gutter))}
+.dark{background:var(--ink);color:var(--paper);outline:3px solid var(--paper);outline-offset:-3px}
+.red{background:var(--red);color:var(--paper)}
+
+/* the splash: speed lines + halftone, title in heavy letters */
+.splash{min-height:clamp(340px,62vh,560px);display:flex;flex-direction:column;justify-content:flex-end;
+  background:
+    radial-gradient(circle at 78% 30%,transparent 0 9%,var(--ink) 9.4% 10.2%,transparent 10.6%),
+    repeating-conic-gradient(from 0deg at 78% 30%,var(--ink) 0 1.2deg,transparent 1.2deg 7deg),
+    var(--paper)}
+.splash::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(var(--ink) 22%,transparent 24%) 0 0/7px 7px;opacity:.16;
+  -webkit-mask:linear-gradient(200deg,#000,transparent 55%);mask:linear-gradient(200deg,#000,transparent 55%)}
+.title{font:400 clamp(4.2rem,17vw,12rem)/.82 var(--letter);letter-spacing:.01em;margin:0;text-transform:uppercase;
+  color:var(--ink);text-shadow:6px 6px 0 var(--red);position:relative;z-index:1}
+.title span{color:var(--red);text-shadow:6px 6px 0 var(--ink)}
+
+/* caption boxes: the narration of a noir page */
+.cap{display:inline-block;background:#f2e3a6;color:var(--ink);border:3px solid var(--ink);padding:.55em .8em;
+  font:700 .95rem/1.4 var(--type);text-transform:uppercase;letter-spacing:.04em;max-width:34rem;position:relative;z-index:1}
+.dark .cap,.red .cap{border-color:var(--ink)}
+.cap + .cap{margin-top:.5rem}
+.splash .cap{margin-top:1.4rem;transform:rotate(-1.2deg)}
+
+h2{font:400 clamp(2.4rem,7vw,4.6rem)/.9 var(--letter);text-transform:uppercase;margin:0 0 .35em;letter-spacing:.01em;
+  text-wrap:balance}
+.red h2{color:var(--paper);text-shadow:4px 4px 0 var(--ink)}
+.dark h2 em{font-style:normal;color:var(--red)}
+p{margin:.6em 0;max-width:62ch}
+
+/* a two-panel row split by one diagonal */
+.row{display:grid;grid-template-columns:1.15fr 1fr;gap:var(--gutter);margin-top:calc(var(--slash) * -1 + var(--gutter))}
+.row .panel{margin:0;padding-top:calc(var(--slash) + 28px)}
+.row .l{clip-path:polygon(0 var(--slash),100% 0,calc(100% - var(--slash)) 100%,0 100%);padding-right:calc(var(--slash) + 20px)}
+.row .r{clip-path:polygon(var(--slash) 0,100% 0,100% 100%,0 100%);margin-left:calc(var(--slash) * -1);
+  padding-left:calc(var(--slash) + 28px);padding-top:calc(var(--slash) + 4px)}
+
+/* the line you run: plain, large, copyable -- the art never gets in its way */
+.cmd{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin:1rem 0}
+.cmd pre{flex:1 1 18rem;min-width:0;max-width:100%;margin:0;padding:1rem 1.1rem;background:var(--ink);color:var(--paper);border:3px solid var(--paper);
+  overflow-x:auto;font:700 1.02rem/1.4 var(--type)}
+.red .cmd pre{border-color:var(--ink)}
+button{font:400 1.35rem/1 var(--letter);text-transform:uppercase;letter-spacing:.04em;padding:.6em 1em;cursor:pointer;
+  background:var(--paper);color:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink)}
+button:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+code{font-family:var(--type);font-weight:700}
+pre.cmds{max-width:100%;background:var(--ink);color:var(--paper);padding:1rem;overflow-x:auto;font:700 .92rem/1.6 var(--type);margin:.8rem 0}
+pre.cmds b{color:var(--red);font-weight:700}
+
+/* the switches table */
+.sw{display:grid;gap:12px;margin-top:1rem}
+.sw div{border-left:8px solid var(--red);padding:.2rem 0 .2rem 1rem}
+.sw dt{font:400 1.5rem/1 var(--letter);text-transform:uppercase;letter-spacing:.03em}
+.sw dd{margin:.3rem 0 0}
+.off{display:inline-block;font:400 .95rem/1 var(--letter);background:var(--ink);color:var(--paper);padding:.25em .5em;
+  margin-left:.4rem;vertical-align:middle;letter-spacing:.06em}
+
+.sfx{position:absolute;right:clamp(16px,4vw,48px);bottom:clamp(14px,3vw,32px);font:400 clamp(2rem,6vw,3.6rem)/1 var(--letter);
+  color:var(--red);transform:rotate(8deg);-webkit-text-stroke:2px var(--ink);text-transform:uppercase;pointer-events:none}
+a{color:inherit;text-decoration-thickness:2px;text-underline-offset:3px}
+.red a{color:var(--paper)}
+footer{color:var(--dim);font-size:.9rem;padding-top:calc(var(--slash) / 2)}
+footer a{color:var(--paper)}
+
+@media (max-width:760px){
+  .row{grid-template-columns:1fr}
+  .row .l{clip-path:polygon(0 var(--slash),100% 0,100% calc(100% - var(--slash)),0 100%);padding-right:clamp(28px,5vw,56px);
+    padding-bottom:calc(var(--slash) + 28px)}
+  .row .r{clip-path:polygon(0 var(--slash),100% 0,100% 100%,0 100%);margin-left:0;margin-top:calc(var(--slash) * -1 + var(--gutter) - var(--gutter));
+    padding-left:clamp(28px,5vw,56px);padding-top:calc(var(--slash) + 28px)}
+  .sfx{display:none}
+}
+@media (prefers-reduced-motion:no-preference){
+  .title{animation:in .5s cubic-bezier(.2,1.4,.4,1) both}
+  @keyframes in{from{transform:translateX(-4%) skewX(-8deg)}to{transform:none}}
+}
+</style>
+</head>
+<body>
+<main class="page">
+
+  <section class="panel cut-b splash" aria-label="Thomas">
+    <h1 class="title">Tho<span>mas</span>.</h1>
+    <div>
+      <div class="cap">Your own assistant. One brain. One persona you design.</div><br>
+      <div class="cap">It runs on your machine. Your prompts go to the brain you chose, under your own login.</div>
+    </div>
+  </section>
+
+  <section class="panel cut-tb red" aria-labelledby="h-install">
+    <h2 id="h-install">One line.</h2>
+    <div class="cmd">
+      <pre id="line"><code>curl -fsSL https://qizwiz.github.io/thomas-kit/install | sh</code></pre>
+      <button type="button" id="copy">Copy</button>
+    </div>
+    <p>It downloads the kit, checks its SHA-256 against the <a href="thomas-kit.tgz.sha256">published checksum</a>,
+      installs into <code>~/.local/share/thomas</code>, links <code>~/.local/bin/thomas</code> if nothing is there,
+      and runs <code>thomas doctor</code>, which names anything still missing and the exact fix. Needs
+      Python&nbsp;3.10+ and, for the Claude brain, Node&nbsp;22+: the adapter is installed with
+      <code>npm install -g</code>, so it goes wherever your npm puts global packages. The Claude brain also needs your
+      own Claude login: install <a href="https://claude.com/claude-code">Claude Code</a> and run
+      <code>claude auth login</code>, or set <code>ANTHROPIC_API_KEY</code>.</p>
+    <p><strong>Read <a href="install">the installer</a> before you run it.</strong> The checksum catches a
+      corrupted download; it does not protect against a compromised host, since both files come from the same place.</p>
+  </section>
+
+  <div class="row">
+    <section class="panel l" aria-labelledby="h-design">
+      <h2 id="h-design">Who it is.<br>Your call.</h2>
+      <pre class="cmds"><code>thomas persona set :name Ada
+thomas persona set :personality <b>"warm, brief"</b>
+claude auth login      <b># your login, never ours</b>
+thomas ask <b>"hello, who are you?"</b></code></pre>
+      <p>Name, pronouns, voice, personality. One file: <code>~/.thomas/thomas.sexpr</code>.</p>
+    </section>
+    <section class="panel r dark" aria-labelledby="h-brain">
+      <span class="sfx" aria-hidden="true">Snap!</span>
+      <h2 id="h-brain">One <em>brain.</em></h2>
+      <p>Claude, Codex or Gemini, through the Agent Client Protocol. Claude is the default; Codex and Gemini
+        need autonomy on (see below). Thomas never ships a credential; you log in to the brain you chose yourself.</p>
+    </section>
+  </div>
+
+  <section class="panel cut-tb" aria-labelledby="h-sees">
+    <h2 id="h-sees">What it can see.</h2>
+    <div class="cap">The plain terms. No fine print.</div>
+    <p>Thomas runs on your machine; your prompts go to the brain's provider (Anthropic, OpenAI or Google) under
+      your own login. With the default settings Thomas runs only the Claude brain, in an empty scratch folder, and
+      refuses every request it is asked to approve: reading, writing or running anything. Claude may still run a
+      few read-only commands such as <code>whoami</code> and <code>pwd</code> without asking, so what reaches the
+      provider includes your prompt, your persona settings, your account name and a temporary folder path, along
+      with what Claude itself sends (such as your platform and the date).</p>
+    <p>Codex and Gemini read files outside that folder even in their asking modes, so Thomas runs them only after
+      you turn autonomy on. Reading another app's stored key is off unless you turn it on.</p>
+  </section>
+
+  <section class="panel cut-t dark" aria-labelledby="h-may">
+    <h2 id="h-may">What it <em>may</em> do.</h2>
+    <p>Three switches in <code>~/.thomas/thomas.sexpr</code>. All of them start off.</p>
+    <dl class="sw">
+      <div><dt>:autonomy <span class="off">Off</span></dt>
+        <dd>Off: the brain can answer but not act (Claude only). On: it may read, write and run commands anywhere
+          your user account can, without asking, and Codex and Gemini become available.</dd></div>
+      <div><dt>:borrow-credentials <span class="off">Off</span></dt>
+        <dd>Off: the brain sees only your environment. On: it may also read a key another app stored.</dd></div>
+      <div><dt>:ledger <span class="off">Off</span></dt>
+        <dd>Off: Thomas keeps no ledger (Claude still saves its usual session transcript under
+          <code>~/.claude/projects</code>). On: each turn's event kinds and a short summary also go to a local redis stream, if one runs.</dd></div>
+    </dl>
+  </section>
+
+  <footer>
+    <a href="install">The installer</a> · <a href="thomas-kit.tgz">The kit</a> ·
+    <a href="thomas-kit.tgz.sha256">Its checksum</a> · This page loads nothing from anywhere else.
+  </footer>
+</main>
+<script>
+document.getElementById("copy").addEventListener("click", function () {
+  var b = this, text = document.getElementById("line").innerText.trim();
+  function done(ok) { b.textContent = ok ? "Copied" : "Selected"; setTimeout(function () { b.textContent = "Copy"; }, 1600); }
+  function select() {
+    var r = document.createRange(); r.selectNodeContents(document.getElementById("line"));
+    var s = getSelection(); s.removeAllRanges(); s.addRange(r); done(false);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () { done(true); }, select);
+  } else { select(); }
+});
+</script>
+</body>
+</html>

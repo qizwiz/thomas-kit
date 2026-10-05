@@ -1,0 +1,147 @@
+#!/bin/sh
+# Thomas installer:  curl -fsSL https://qizwiz.github.io/thomas-kit/install | sh
+# Everything runs inside main, called on the last line, so a download cut off mid-script runs nothing.
+set -eu
+main() {
+  BASE="${THOMAS_BASE:-https://qizwiz.github.io/thomas-kit}"
+  DEST="${THOMAS_HOME:-$HOME/.local/share/thomas}"
+  case "$DEST" in /*) ;; *) DEST="$PWD/$DEST" ;; esac
+  while :; do case "$DEST" in *//*) DEST="${DEST%%//*}/${DEST#*//}" ;; *) break ;; esac; done
+  while [ "${#DEST}" -gt 1 ] && [ "${DEST%/}" != "$DEST" ]; do DEST="${DEST%/}"; done
+  for c in curl tar python3; do
+    command -v "$c" >/dev/null 2>&1 || { echo "Thomas needs '$c' -- install it and run this again."; exit 1; }
+  done
+  python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' \
+    || { echo "Thomas needs Python 3.10 or newer (python3 here is older). Nothing was installed."; exit 1; }
+  # refuse every DEST shape this script could damage, BEFORE anything is downloaded or moved:
+  # a symlink (moving it would replace the user's link), anything that is not a folder, an unreadable folder,
+  # a folder that holds someone else's files, and a path a shebang cannot carry
+  case "$DEST" in *" "*) echo "Thomas cannot be installed in a folder whose path has a space: $DEST"; exit 1 ;; esac
+  if [ -L "$DEST" ] || { [ -e "$DEST" ] && [ ! -d "$DEST" ]; }; then
+    echo "$DEST exists and is not a plain folder -- refusing to touch it. Set THOMAS_HOME to an empty folder."
+    exit 1
+  fi
+  if [ -d "$DEST" ] && [ ! -r "$DEST" ]; then
+    echo "$DEST exists and cannot be read -- refusing to touch it. Set THOMAS_HOME to an empty folder."
+    exit 1
+  fi
+  if [ -d "$DEST" ] && [ -n "$(ls -A "$DEST" 2>/dev/null)" ] && [ ! -f "$DEST/.thomas-kit" ]; then
+    echo "$DEST exists and is not a Thomas install -- refusing to replace it. Set THOMAS_HOME to an empty folder."
+    exit 1
+  fi
+  case "$DEST" in "$HOME/.thomas" | "$HOME/.thomas/"*)
+    echo "$DEST is where Thomas keeps your settings -- install somewhere else. Nothing was installed."; exit 1 ;;
+  esac
+  if [ -L "$HOME/.local/bin" ] || { [ -e "$HOME/.local/bin" ] && [ ! -d "$HOME/.local/bin" ]; }; then
+    echo "$HOME/.local/bin exists and is not a folder -- move it aside and run this again. Nothing was installed."
+    exit 1
+  fi
+  if command -v sha256sum >/dev/null 2>&1; then sha() { sha256sum "$1" | cut -d' ' -f1; }
+  else sha() { shasum -a 256 "$1" | cut -d' ' -f1; }; fi
+  tmp=""
+  new=""
+  old=""
+  placed=no
+  rolled=no
+  restored=no
+  # put back whatever this run moved; delete only what this run created. It runs at most once (a signal arriving
+  # during the failure branch's rollback must not run a second one over the restored install) and ignores further
+  # signals while it works. Placement is the FLAG alone: the swap that sets it runs with signals ignored, so when
+  # this can run at all the flag matches the disk (reading the disk instead deleted an unmoved install, audit 9).
+  rollback() {
+    trap '' INT TERM HUP QUIT
+    if [ "$rolled" = yes ]; then return 0; fi
+    rolled=yes
+    if [ "$placed" = yes ]; then rm -rf "$DEST" || true; fi
+    if [ -n "$old" ] && [ -d "$old/thomas" ] && [ ! -e "$DEST" ]; then
+      if mv "$old/thomas" "$DEST"; then restored=yes; fi
+    fi
+  }
+  interrupted() {
+    rollback
+    echo
+    if [ "$restored" = yes ]; then echo "Interrupted. Your previous install was put back."
+    elif [ -n "$old" ] && [ -d "$old/thomas" ]; then echo "Interrupted. Your previous install is safe in $old/thomas."
+    else echo "Interrupted. Nothing of yours was changed."; fi
+    exit 130
+  }
+  cleanup() {
+    rm -rf "$tmp"
+    if [ -n "$new" ]; then rm -rf "$new"; fi
+    if [ -n "$old" ] && [ ! -e "$old/thomas" ]; then rmdir "$old" 2>/dev/null || true; fi
+  }
+  trap cleanup EXIT
+  trap interrupted INT TERM HUP QUIT
+  # a signal must not land between mktemp creating a folder and the variable naming it (that would strand it)
+  trap '' INT TERM HUP QUIT
+  tmp=$(mktemp -d)
+  trap interrupted INT TERM HUP QUIT
+  echo "Downloading Thomas from $BASE ..."
+  curl -fsSL "$BASE/thomas-kit.tgz" -o "$tmp/kit.tgz" \
+    || { echo "Could not download the kit. Nothing was installed."; exit 1; }
+  curl -fsSL "$BASE/thomas-kit.tgz.sha256" -o "$tmp/kit.sha256" \
+    || { echo "Could not fetch the published checksum. Nothing was installed."; exit 1; }
+  want=$(cut -d' ' -f1 "$tmp/kit.sha256")
+  got=$(sha "$tmp/kit.tgz")
+  if [ "$want" != "$got" ]; then
+    echo "Checksum mismatch -- the download is not the published kit. Nothing was installed."
+    echo "  expected $want"
+    echo "  got      $got"
+    exit 1
+  fi
+  mkdir -p "$(dirname "$DEST")"
+  # unpack BESIDE the destination, so the swap below is a rename on one filesystem, never a partial copy
+  trap '' INT TERM HUP QUIT
+  new=$(mktemp -d "$(dirname "$DEST")/.thomas-new.XXXXXX")
+  trap interrupted INT TERM HUP QUIT
+  tar xzf "$tmp/kit.tgz" -C "$new"
+  # the old install moves into a UNIQUE folder beside it and is deleted only after the new one sets up cleanly
+  # from naming the old-install folder through the swap (two renames and a flag), no signal may land
+  trap '' INT TERM HUP QUIT
+  old=$(mktemp -d "$(dirname "$DEST")/.thomas-old.XXXXXX")
+  if [ -d "$DEST" ]; then mv "$DEST" "$old/thomas"; fi
+  if mv "$new/thomas" "$DEST"; then placed=yes; fi
+  trap interrupted INT TERM HUP QUIT
+  if [ "$placed" = no ] || ! "$DEST/install.sh"; then
+    rollback
+    if [ "$restored" = yes ]; then
+      echo "Setup did not finish. The new files were removed and your previous install was put back."
+    elif [ -n "$old" ] && [ -d "$old/thomas" ]; then
+      echo "Setup did not finish. Your previous install is safe in $old/thomas."
+    else
+      echo "Setup did not finish. The new files were removed; nothing was installed."
+    fi
+    exit 1
+  fi
+  # committed: the new install is set up, so finish (drop the old copy, link) without stopping halfway
+  trap '' INT TERM HUP QUIT
+  rm -rf "$old"
+  mkdir -p "$HOME/.local/bin"
+  # create ~/.local/bin/thomas only if nothing is there; never replace another link or file
+  link="$HOME/.local/bin/thomas"
+  if [ ! -e "$link" ] && [ ! -L "$link" ]; then
+    ln -s "$DEST/thomas" "$link"
+  fi
+  echo
+  if [ -L "$link" ] && [ "$(readlink "$link")" = "$DEST/thomas" ]; then
+    echo "Installed: $link -> $DEST/thomas"
+    case ":$PATH:" in
+      *":$HOME/.local/bin:"*) ;;
+      *)
+        case "${SHELL:-}" in
+          */fish) echo "Add it to your PATH:  fish_add_path ~/.local/bin" ;;
+          */zsh) echo "Add it to your PATH:  echo 'export PATH=\$HOME/.local/bin:\$PATH' >> \"$HOME/.zshrc\"   (then open a new terminal)" ;;
+          */bash)
+            # macOS Terminal starts bash as a login shell, which reads ~/.bash_profile rather than ~/.bashrc
+            if [ "$(uname)" = Darwin ]; then rc="$HOME/.bash_profile"; else rc="$HOME/.bashrc"; fi
+            echo "Add it to your PATH:  echo 'export PATH=\$HOME/.local/bin:\$PATH' >> \"$rc\"   (then open a new terminal)" ;;
+          *) echo "Add it to your PATH:  echo 'export PATH=\$HOME/.local/bin:\$PATH' >> \"$HOME/.profile\"   (then open a new terminal)" ;;
+        esac
+        ;;
+    esac
+  else
+    echo "Installed in $DEST. $link already exists and is not this install's link, so it was left alone:"
+    echo "  run $DEST/thomas directly."
+  fi
+}
+main "$@"
