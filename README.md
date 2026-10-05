@@ -33,6 +33,17 @@ Works on macOS and Linux. On Windows, run it inside WSL (it looks like Linux to 
     thomas remember "I'm vegetarian"                # a note every answer should know
     thomas forget                                   # delete the kept conversation
 
+## From your phone (Telegram)
+
+    thomas telegram setup       # paste the token of a bot you made with @BotFather (it is not shown)
+    thomas telegram run         # prints a code; send "/pair CODE" to your bot from your phone
+    thomas telegram install     # then keep it answering in the background, also after you log in again
+
+Only the chat that sent the code reaches your assistant; other people's private chats are told it is private,
+and groups and channels are ignored. Five wrong codes close pairing until you run it again. Telegram works only
+with autonomy off. Your computer must be on and logged in for it to answer. `thomas telegram uninstall` stops it. Telegram
+bot chats are not end-to-end encrypted: your messages and the replies pass through Telegram's servers.
+
 ## Privacy
 
 Thomas runs on your machine; your prompts go to the brain's provider (Anthropic, OpenAI or Google) under your
@@ -49,7 +60,9 @@ So that it remembers you, Thomas keeps your recent turns in `~/.thomas/conversat
 each message. `thomas forget` deletes the conversation; `thomas ask --new` leaves it out once; `(memory :keep nil)`
 in `~/.thomas/thomas.sexpr` stops keeping and sending turns and notes (files already written stay until you delete
 them). Thomas also logs each ask's time, brain, success and character counts, never its text, to
-`~/.thomas/asks.jsonl`.
+`~/.thomas/asks.jsonl`. The Telegram channel keeps its bot token, your chat's id and its read position in
+`~/.thomas/telegram.json`, and the background service writes status lines (never your messages) to
+`~/.thomas/telegram.log`; both are readable only by your user account.
 
 ## What Thomas may do (all OFF by default; turn on in ~/.thomas/thomas.sexpr)
 
