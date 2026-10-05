@@ -125,11 +125,9 @@ footer a{color:var(--paper)}
     <p><strong>Where to paste it:</strong> a terminal, the text window where you type commands. On a Mac press
       <kbd>⌘</kbd>+<kbd>Space</kbd>, type <code>Terminal</code> and press Return; on Linux open the app called
       Terminal. Click <em>Copy</em> above, paste into that window, and press Return.</p>
-    <p>It downloads the kit, checks its SHA-256 against the <a href="thomas-kit.tgz.sha256">published checksum</a>,
-      installs into <code>~/.local/share/thomas</code>, links <code>~/.local/bin/thomas</code> if nothing is there,
-      and runs <code>thomas doctor</code>, which names anything still missing and the exact fix. Needs
-      Python&nbsp;3.10+. For the Claude brain it puts the adapter in its own folder, fetching Node&nbsp;22 there too if
-      you do not have it, so no admin rights are needed.</p>
+    <p>It installs Thomas in your home folder, then checks that everything it needs is there and tells you how to
+      fix anything missing. Needs Python&nbsp;3.10+. The installer itself needs no admin rights (on Debian or Ubuntu
+      you may first need <code>sudo apt install python3-venv</code>).</p>
     <p><strong>You need a paid Claude account.</strong> The Claude brain runs on Claude Code, which needs a Pro,
       Max, Team or Enterprise plan, or a Claude Console account, billed by API usage; the free claude.ai plan does
       not include it. Get one at <a href="https://claude.ai">claude.ai</a> (or
@@ -138,8 +136,16 @@ footer a{color:var(--paper)}
       in the browser it opens, or set <code>ANTHROPIC_API_KEY</code>.</p>
     <p><strong>Works on</strong> macOS and Linux. Windows: run it inside WSL, which looks like Linux to the
       installer; we have not tested it there yet.</p>
-    <p><strong>Read <a href="install">the installer</a> before you run it.</strong> The checksum catches a
-      corrupted download; it does not protect against a compromised host, since both files come from the same place.</p>
+    <p><strong>Read <a href="install">the installer</a> before you run it.</strong></p>
+    <details>
+      <summary>Details: what it does, and what the checksum does and does not prove</summary>
+      <p>It downloads the kit, checks its SHA-256 against the <a href="thomas-kit.tgz.sha256">published checksum</a>,
+        installs into <code>~/.local/share/thomas</code>, links <code>~/.local/bin/thomas</code> if nothing is there,
+        and runs <code>thomas doctor</code>, which names anything still missing and the exact fix. For the Claude
+        brain it puts the adapter in its own folder, fetching Node&nbsp;22 there too if you do not have it.</p>
+      <p>The checksum catches a corrupted download; it does not protect against a compromised host, since both files
+        come from the same place.</p>
+    </details>
   </section>
 
   <div class="row">
