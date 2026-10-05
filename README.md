@@ -11,8 +11,12 @@ or, from the tarball: `tar xzf thomas-kit.tgz && cd thomas && ./install.sh`
 `install.sh` makes a private Python environment in this folder, installs the Claude brain adapter into this folder
 (fetching Node 22 here too if you do not have it -- no admin rights needed), and runs `thomas doctor`, which names
 anything still missing and the exact fix.
-The Claude brain also needs your own Claude login: install Claude Code (https://claude.com/claude-code) and run
-`claude auth login`, or set ANTHROPIC_API_KEY.
+The Claude brain also needs your own Claude login, on a PAID account: Claude Code needs a Pro, Max, Team or
+Enterprise plan, or a Claude Console account (platform.claude.com, billed by API usage); the free claude.ai plan
+does not include it.
+Install Claude Code (https://claude.com/claude-code) and run `claude auth login`, or set ANTHROPIC_API_KEY.
+
+Works on macOS and Linux. On Windows, run it inside WSL (it looks like Linux to the installer; not yet tested there).
 
 ## First steps
 
