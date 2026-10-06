@@ -1,6 +1,7 @@
 # Thomas
 
-Your own assistant: one brain (Claude, Codex or Gemini), one persona you design, running on your machine.
+Your own assistant: one brain (Claude, Codex, Gemini, or free models through OpenRouter), one persona you design,
+running on your machine.
 
 ## Install
 
@@ -22,11 +23,22 @@ You do not need to install anything else for that: the installer already brought
 `thomas login` opens it in your browser (on a computer without one, it prints a link to open on your phone and a code
 to paste back). Or set ANTHROPIC_API_KEY to a Console key.
 
+No paid Claude account? Start free instead: `thomas login --free` takes a free OpenRouter key (sign in at
+openrouter.ai with Google or GitHub, open openrouter.ai/keys and press Create API Key -- no card). Thomas then uses
+OpenRouter's free models, keeping up to three that answered when you logged in and falling back between them. The
+free brain answers in text only: it cannot read your files or run anything, and free models have a daily request
+limit. Free models are run by outside companies that may keep, train on, or publish what you send -- including your
+notes and recent conversation, which Thomas sends with every question -- so do not send anything private;
+OpenRouter may ask you to allow this in openrouter.ai/settings/privacy before free models work. The key is kept in
+~/.thomas/openrouter.key and the chosen models in ~/.thomas/free-models, both readable only by you. Run
+`thomas login` later to switch to Claude.
+
 Works on macOS and Linux. On Windows, run it inside WSL (it looks like Linux to the installer; not yet tested there).
 
 ## First steps
 
     thomas login                                    # sign in with your own paid Claude account (once)
+    thomas login --free                             # ...or start free with an OpenRouter key (no card)
     thomas persona set :name Ada                    # name your assistant
     thomas persona set :personality "warm, brief"
     thomas chat                                     # talk back and forth; an empty line ends it
@@ -63,7 +75,9 @@ read-only commands such as `whoami` and `pwd` without asking, so what reaches th
 prompt, your persona settings, your account name and a temporary folder path, along with what Claude itself
 sends (such as your platform and the date). Codex and Gemini read files outside that folder even in their
 asking modes, so Thomas runs them only after you set `:autonomy t`. Logins stay yours: Thomas never ships a
-credential, and reading another app's stored key is off unless you turn it on.
+credential, and reading another app's stored key is off unless you turn it on. On the free brain, your prompt,
+persona, notes and recent turns go to OpenRouter and to the outside company running the free model, which may keep,
+train on, or publish them.
 
 So that it remembers you, Thomas keeps your recent turns in `~/.thomas/conversation.jsonl` and your notes in
 `~/.thomas/memory.md` (Thomas creates both readable only by your user account) and sends them to the brain with

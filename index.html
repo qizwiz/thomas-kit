@@ -129,13 +129,22 @@ footer a{color:var(--paper)}
       terminal knows the <code>thomas</code> command, then checks that everything it needs is there and tells you how to fix
       anything missing. Needs Python&nbsp;3.10+. The installer itself needs no admin rights (on Debian or Ubuntu
       you may first need <code>sudo apt install python3-venv</code>).</p>
-    <p><strong>You need a paid Claude account.</strong> The Claude brain runs on Claude Code, which needs a Pro,
+    <p><strong>For the Claude brain you need a paid Claude account.</strong> The Claude brain runs on Claude Code, which needs a Pro,
       Max, Team or Enterprise plan, or a Claude Console account, billed by API usage; the free claude.ai plan does
       not include it. Get one at <a href="https://claude.ai">claude.ai</a> (or
       <a href="https://platform.claude.com">platform.claude.com</a>). You do not need to install anything else for the sign-in: the installer
       brings Claude Code's sign-in along, and <code>thomas login</code> opens it in your browser (on a computer
       without one, it prints a link to open on your phone and a code to paste back). Or set
       <code>ANTHROPIC_API_KEY</code>.</p>
+    <p><strong>No paid account? Start free.</strong> Run <code>thomas login --free</code> and paste a free
+      OpenRouter key: sign in at <a href="https://openrouter.ai">openrouter.ai</a> with Google or GitHub, open
+      <a href="https://openrouter.ai/keys">openrouter.ai/keys</a> and press <em>Create API Key</em>; no card. Thomas
+      then answers with OpenRouter's free models. The free brain answers in text only (it cannot read your files or
+      run anything), and free models have a daily request limit. They are run by outside companies that may keep,
+      train on, or publish what you send, including your notes and recent conversation, which Thomas sends with
+      every question, so do not send anything private; OpenRouter may ask you to allow this in its
+      <a href="https://openrouter.ai/settings/privacy">privacy settings</a> before free models work.
+      <code>thomas login</code> switches you to Claude later.</p>
     <p><strong>Works on</strong> macOS and Linux. Windows: run it inside WSL, which looks like Linux to the
       installer; we have not tested it there yet.</p>
     <p><strong>Read <a href="install">the installer</a> before you run it.</strong></p>
@@ -170,8 +179,8 @@ thomas remember <b>"I'm vegetarian"</b></code></pre>
     <section class="panel r dark" aria-labelledby="h-brain">
       <span class="sfx" aria-hidden="true">Snap!</span>
       <h2 id="h-brain">One <em>brain.</em></h2>
-      <p>Claude, Codex or Gemini, through the Agent Client Protocol. Claude is the default; Codex and Gemini
-        need autonomy on (see below). Thomas never ships a credential; you log in to the brain you chose yourself.</p>
+      <p>Claude, Codex or Gemini, through the Agent Client Protocol, or free models through OpenRouter (text
+        only). Claude is the default; Codex and Gemini need autonomy on (see below). Thomas never ships a credential; you log in to the brain you chose yourself.</p>
     </section>
   </div>
 
@@ -203,6 +212,8 @@ thomas telegram install    <b># keep it answering in the background</b></code></
       creates readable only by your user account; <code>(memory :keep nil)</code> stops keeping and sending them; files already written stay until you delete them.</p>
     <p>Codex and Gemini read files outside that folder even in their asking modes, so Thomas runs them only after
       you turn autonomy on. Reading another app's stored key is off unless you turn it on.</p>
+    <p>On the free brain, your prompt, persona, notes and recent turns go to OpenRouter and to the outside company
+      running the free model, which may keep, train on, or publish them.</p>
   </section>
 
   <section class="panel cut-t dark" aria-labelledby="h-may">
