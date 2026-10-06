@@ -203,7 +203,9 @@ thomas telegram install    <b># keep it answering in the background</b></code></
     <h2 id="h-sees">What it can see.</h2>
     <div class="cap">The plain terms. No fine print.</div>
     <p>Thomas runs on your machine; your prompts go to the brain's provider (Anthropic, OpenAI or Google) under
-      your own login. With the default settings Thomas runs only the Claude brain, in an empty scratch folder, and
+      your own login, or, on the free brain, to OpenRouter and the company running the free model. The free brain
+      only answers in text. With the default settings the only other brain Thomas runs is Claude, in an empty
+      scratch folder, and it
       refuses every request it is asked to approve: reading, writing or running anything. Claude may still run a
       few read-only commands such as <code>whoami</code> and <code>pwd</code> without asking, so what reaches the
       provider includes your prompt, your persona settings, your account name and a temporary folder path, along
@@ -221,8 +223,9 @@ thomas telegram install    <b># keep it answering in the background</b></code></
     <p>Three switches in <code>~/.thomas/thomas.sexpr</code>. All of them start off.</p>
     <dl class="sw">
       <div><dt>:autonomy <span class="off">Off</span></dt>
-        <dd>Off: the brain can answer but not act (Claude only). On: it may read, write and run commands anywhere
-          your user account can, without asking, and Codex and Gemini become available.</dd></div>
+        <dd>Off: the brain can answer but not act (Claude only; the free brain never acts either way). On: the
+          Claude, Codex or Gemini brain may read, write and run commands anywhere your user account can, without
+          asking, and Codex and Gemini become available.</dd></div>
       <div><dt>:borrow-credentials <span class="off">Off</span></dt>
         <dd>Off: the brain sees only your environment. On: it may also read a key another app stored.</dd></div>
       <div><dt>:ledger <span class="off">Off</span></dt>

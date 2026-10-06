@@ -69,7 +69,8 @@ bot chats are not end-to-end encrypted: your messages and the replies pass throu
 ## Privacy
 
 Thomas runs on your machine; your prompts go to the brain's provider (Anthropic, OpenAI or Google) under your
-own login. With the default settings Thomas runs only the Claude brain, in an empty scratch folder, and refuses
+own login, or, on the free brain, to OpenRouter and the company running the free model. The free brain only answers
+in text. With the default settings the only other brain Thomas runs is Claude, in an empty scratch folder, and it refuses
 every request it is asked to approve -- reading, writing or running anything. Claude may still run a few
 read-only commands such as `whoami` and `pwd` without asking, so what reaches the provider includes your
 prompt, your persona settings, your account name and a temporary folder path, along with what Claude itself
@@ -93,8 +94,9 @@ them). Thomas also logs each ask's time, brain, success and character counts, ne
     (brain :autonomy nil :borrow-credentials nil :ledger nil)
 
 - `:autonomy` -- off: the brain runs in its asking mode and Thomas refuses every tool request, so it can answer
-  but not act (Claude only). On (`t`): the brain may read, write and run commands anywhere your user account
-  can, without asking -- and Codex and Gemini become available.
+  but not act (Claude only; the free brain never acts either way). On (`t`): the Claude, Codex or Gemini brain may
+  read, write and run commands anywhere your user account can, without asking -- and Codex and Gemini become
+  available.
 - `:borrow-credentials` -- off: the brain sees only your environment (e.g. your own GEMINI_API_KEY). On: it may
   also read a key another app stored (opencode's auth.json).
 - `:ledger` -- off: Thomas keeps no ledger (Claude still saves its usual session transcript under
