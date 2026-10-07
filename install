@@ -29,8 +29,8 @@ main() {
     echo "$DEST exists and is not a Thomas install -- refusing to replace it. Set THOMAS_HOME to an empty folder."
     exit 1
   fi
-  # the settings guard compares RESOLVED paths: `.`, `..` and a symlinked parent resolve first (audit 11:
-  # $HOME/.local/../.thomas passed a plain string match). A ./.. path whose folder does not exist yet cannot be
+  # the settings guard compares RESOLVED paths: `.`, `..` and a symlinked parent resolve first
+  # ($HOME/.local/../.thomas passed a plain string match). A ./.. path whose folder does not exist yet cannot be
   # resolved, so it is refused rather than guessed. DEST itself stays as given for every other check.
   case "$DEST" in */./* | */. | */../* | */..) dots=yes ;; *) dots=no ;; esac
   parent=$(dirname "$DEST")
@@ -64,7 +64,7 @@ main() {
   # put back whatever this run moved; delete only what this run created. It runs at most once (a signal arriving
   # during the failure branch's rollback must not run a second one over the restored install) and ignores further
   # signals while it works. Placement is the FLAG alone: the swap that sets it runs with signals ignored, so when
-  # this can run at all the flag matches the disk (reading the disk instead deleted an unmoved install, audit 9).
+  # this can run at all the flag matches the disk (reading the disk instead deleted an unmoved install).
   rollback() {
     trap '' INT TERM HUP QUIT
     if [ "$rolled" = yes ]; then return 0; fi
@@ -165,7 +165,7 @@ main() {
             if [ "$(uname)" = Darwin ]; then
               # macOS Terminal starts bash as a LOGIN shell, which reads only the FIRST of these that exists --
               # so append to that one; creating ~/.bash_profile beside an existing ~/.profile would silently stop
-              # bash reading the user's ~/.profile (pre-publish audit, reproduced 2026-10-05)
+              # bash reading the user's ~/.profile
               rc="$HOME/.bash_profile"
               for f in "$HOME/.bash_profile" "$HOME/.bash_login" "$HOME/.profile"; do
                 if [ -e "$f" ]; then rc="$f"; break; fi

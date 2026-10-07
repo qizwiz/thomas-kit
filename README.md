@@ -70,7 +70,7 @@ bot chats are not end-to-end encrypted: your messages and the replies pass throu
 
 Thomas runs on your machine; your prompts go to the brain's provider (Anthropic, OpenAI or Google) under your
 own login, or, on the free brain, to OpenRouter and the company running the free model. The free brain only answers
-in text. With the default settings the only other brain Thomas runs is Claude, in an empty scratch folder, and it refuses
+in text. With the default settings the only other brain Thomas runs is Claude, in an empty scratch folder, and Thomas refuses
 every request it is asked to approve -- reading, writing or running anything. Claude may still run a few
 read-only commands such as `whoami` and `pwd` without asking, so what reaches the provider includes your
 prompt, your persona settings, your account name and a temporary folder path, along with what Claude itself
