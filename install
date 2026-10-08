@@ -156,7 +156,7 @@ main() {
       *":$HOME/.local/bin:"*) ;;
       *)
         # ADD the line, don't just print it: a first-time tester typed the full path for every question ("I paste a
-        # giant line every time", persona trial 2026-10-05) because nobody runs a printed PATH command. One line,
+        # giant line every time", a simulated first-time user, 2026-10-05) because nobody runs a printed PATH command. One line,
         # marked, added once; removing it is deleting that line.
         case "${SHELL:-}" in
           */fish | */csh | */tcsh) rc="" ;;
