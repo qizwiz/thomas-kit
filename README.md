@@ -43,6 +43,7 @@ Works on macOS and Linux. On Windows, run it inside WSL (it looks like Linux to 
     thomas persona set :personality "warm, brief"
     thomas chat                                     # talk back and forth; an empty line ends it
     thomas ask "hello, who are you?"                # one message (or the full path the installer printed)
+    thomas check                                    # a fresh session that did not write the last answer checks it
     thomas remember "I'm vegetarian"                # a note every answer should know
     thomas forget                                   # delete the kept conversation
     thomas telegram setup                           # text it from your phone -- see the next section

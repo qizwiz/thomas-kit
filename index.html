@@ -75,6 +75,7 @@ button:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
 code{font-family:var(--type);font-weight:700}
 pre.cmds{max-width:100%;background:var(--ink);color:var(--paper);padding:1rem;overflow-x:auto;font:700 .92rem/1.6 var(--type);margin:.8rem 0}
 pre.cmds b{color:var(--red);font-weight:700}
+pre.cmds.out{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.82rem}
 
 /* the switches table */
 .sw{display:grid;gap:12px;margin-top:1rem}
@@ -111,8 +112,9 @@ footer a{color:var(--paper)}
   <section class="panel cut-b splash" aria-label="Thomas">
     <h1 class="title">Tho<span>mas</span>.</h1>
     <div>
-      <div class="cap">Your own assistant. One brain. One persona you design.</div><br>
-      <div class="cap">It runs on your machine. Your prompts go to the brain you chose, under your own login.</div>
+      <div class="cap">Your own assistant, with a command that has its answers checked.</div><br>
+      <div class="cap">One brain. One persona you design. It runs on your machine; your prompts go to the brain you
+        chose, under your own login.</div>
     </div>
   </section>
 
@@ -163,6 +165,39 @@ footer a{color:var(--paper)}
       <p>The checksum catches a corrupted download; it does not protect against a compromised host, since both files
         come from the same place.</p>
     </details>
+  </section>
+
+  <section class="panel cut-tb" aria-labelledby="h-check">
+    <h2 id="h-check">It checks <em>itself.</em></h2>
+    <pre class="cmds"><code>thomas ask <b>"When did Apollo 11 land, and who walked on the Moon?"</b>
+thomas check           <b># a fresh session that did not write the answer goes through it</b></code></pre>
+    <p>After an answer, <code>thomas check</code> hands the question and the answer (none of your persona, notes or
+      earlier turns) to a fresh session of your brain that did not write it, and asks it to find what is wrong. Each
+      checkable claim it finds comes back marked OK, DOUBT or UNSURE, with the reason; a reply it cannot read that way is
+      shown as written, up to its first 600 characters. On the free brain the check tries your
+      free models starting from the next one in your list, so it may still land on the model that answered. Nothing is added to your conversation, and it needs one: with
+      <code>(memory :keep nil)</code> there is no last answer to check.</p>
+    <p>A real run on the Claude brain, unedited, on an answer we planted with four mistakes in it ("Apollo 11 landed on July 21, 1968.
+      Neil Armstrong and Michael Collins walked on the surface while Buzz Aldrin stayed in orbit."):</p>
+    <pre class="cmds out"><code>Checked by a fresh session of the brain that did not write the answer -- a second opinion, not proof: it
+can share the first answer's blind spots, and it can be wrong itself.
+
+  DOUBT  Apollo 11 landed on July 21, 1968
+         Both parts are wrong: the landing was July 20, 1969 (20:17 UTC), not 1968. Apollo 11 launched July 16, 1969 — in 1968 the program was still flying Apollo 7/8.
+  DOUBT  Neil Armstrong walked on the surface
+         Armstrong did walk on the Moon (first, at 02:56 UTC July 21, 1969), but the claim is only half-right as stated since it's paired with a false partner; Armstrong himself is correct.
+  DOUBT  Michael Collins walked on the surface
+         False. Collins was the Command Module pilot and never landed; he remained in lunar orbit aboard Columbia and is the one who stayed behind.
+  DOUBT  Buzz Aldrin stayed in orbit
+         False — exactly inverted. Aldrin was the Lunar Module pilot and was the second person to walk on the Moon, joining Armstrong on the surface.
+  DOUBT  Implied crew roles (two on surface, one in orbit)
+         The structure is right — two moonwalkers, one in orbit — but the names are swapped: it should be Armstrong and Aldrin on the surface, Collins in orbit.
+
+5 claim(s): 0 OK, 5 doubted, 0 unsure.</code></pre>
+    <p>It caught all four mistakes. It also doubted two things that are true: Armstrong did walk on the Moon (its own
+      reason says so), and two on the surface with one in orbit is right. That is what a second opinion looks like.
+      It is not proof. The checker is the same kind of model as the writer, so it can share the
+      same blind spots, and it can be wrong itself. It costs one more call to your brain.</p>
   </section>
 
   <div class="row">
