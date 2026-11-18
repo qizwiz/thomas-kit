@@ -3,7 +3,10 @@
 # Everything runs inside main, called on the last line, so a download cut off mid-script runs nothing.
 set -eu
 main() {
-  BASE="${THOMAS_BASE:-https://qizwiz.github.io/thomas-kit}"
+  # a CDPATH from the user's environment makes `cd` print and resolve against it
+  unset CDPATH
+  BASE=https://qizwiz.github.io/thomas-kit
+  BASE="${THOMAS_BASE:-$BASE}"
   DEST="${THOMAS_HOME:-$HOME/.local/share/thomas}"
   case "$DEST" in /*) ;; *) DEST="$PWD/$DEST" ;; esac
   while :; do case "$DEST" in *//*) DEST="${DEST%%//*}/${DEST#*//}" ;; *) break ;; esac; done
@@ -35,7 +38,12 @@ main() {
   case "$DEST" in */./* | */. | */../* | */..) dots=yes ;; *) dots=no ;; esac
   parent=$(dirname "$DEST")
   if [ -d "$parent" ]; then
-    canon="$(cd -P "$parent" && pwd -P)/$(basename "$DEST")"
+    # an unsearchable parent made the assignment below fail, and set -e then exited with no message
+    if ! pc=$(cd -P "$parent" 2>/dev/null && pwd -P); then
+      echo "$parent cannot be searched -- install somewhere else. Nothing was installed."
+      exit 1
+    fi
+    canon="$pc/$(basename "$DEST")"
     case "$canon" in */. | */..) canon=$(cd -P "$canon" && pwd -P) ;; esac
   elif [ "$dots" = yes ]; then
     echo "$DEST contains . or .. and its folder does not exist yet -- give a plain path. Nothing was installed."
@@ -47,6 +55,18 @@ main() {
   case "$canon" in "$homec/.thomas" | "$homec/.thomas/"* | "$HOME/.thomas" | "$HOME/.thomas/"*)
     echo "$DEST is where Thomas keeps your settings -- install somewhere else. Nothing was installed."; exit 1 ;;
   esac
+  # the same FOLDER under another spelling: ~/.THOMAS on case-insensitive macOS, or a symlinked ancestor of a path
+  # whose lower folders do not exist yet. Any existing ancestor that IS ~/.thomas (-ef: same file) is refused.
+  if [ -d "$HOME/.thomas" ]; then
+    a="$DEST"
+    while [ -n "$a" ] && [ "$a" != "/" ]; do
+      if [ -e "$a" ] && [ "$a" -ef "$HOME/.thomas" ]; then
+        echo "$DEST is inside the folder where Thomas keeps your settings -- install somewhere else. Nothing was installed."
+        exit 1
+      fi
+      a=$(dirname "$a")
+    done
+  fi
   # a link to a folder is fine (dotfile setups do this; -d follows it); a broken link or a non-folder is not
   if { [ -L "$HOME/.local/bin" ] && [ ! -e "$HOME/.local/bin" ]; } \
     || { [ -e "$HOME/.local/bin" ] && [ ! -d "$HOME/.local/bin" ]; }; then
@@ -121,6 +141,10 @@ main() {
   # an upgrade keeps the Node and adapter the last install fetched (copied, so a rollback still restores the old
   # install whole); install.sh skips what is already there
   if [ "$placed" = yes ] && [ -d "$old/thomas" ]; then
+    # said first: this copy runs with Ctrl-C ignored and can take a while (about 460 MB measured)
+    if [ -d "$old/thomas/node" ] || [ -d "$old/thomas/adapter" ]; then
+      echo "Keeping the Node and brain adapter from your last install (a large copy; Ctrl-C waits until it is done) ..."
+    fi
     for keep in node adapter; do
       if [ -d "$old/thomas/$keep" ]; then cp -Rp "$old/thomas/$keep" "$DEST/$keep" 2>/dev/null || rm -rf "${DEST:?}/$keep"; fi
     done
@@ -147,7 +171,11 @@ main() {
   # create ~/.local/bin/thomas only if nothing is there; never replace another link or file
   link="$HOME/.local/bin/thomas"
   if [ ! -e "$link" ] && [ ! -L "$link" ]; then
-    ln -s "$DEST/thomas" "$link"
+    # set -e made a failed link (an unwritable ~/.local/bin) exit 1 with no message
+    if ! ln -s "$DEST/thomas" "$link" 2>/dev/null; then
+      echo "Installed in $DEST, but $link could not be created: run $DEST/thomas directly."
+      exit 0
+    fi
   fi
   echo
   if [ -L "$link" ] && [ "$(readlink "$link")" = "$DEST/thomas" ]; then
@@ -155,8 +183,8 @@ main() {
     case ":$PATH:" in
       *":$HOME/.local/bin:"*) ;;
       *)
-        # ADD the line, don't just print it: a first-time tester typed the full path for every question ("I paste a
-        # giant line every time", a simulated first-time user, 2026-10-05) because nobody runs a printed PATH command. One line,
+        # ADD the line, don't just print it: a printed PATH command does not get run, and the full path is then typed
+        # for every question. One line,
         # marked, added once; removing it is deleting that line.
         case "${SHELL:-}" in
           */fish | */csh | */tcsh) rc="" ;;
@@ -177,18 +205,47 @@ main() {
           *) rc="$HOME/.profile" ;;
         esac
         mark="# added by the Thomas installer"
+        pathok=""  # set only where the PATH line is confirmed in $rc: the NEW-window note below promises it
+        # shellcheck disable=SC2016  # written LITERALLY: $HOME and $PATH must expand in the user's shell, not here
+        path_line='export PATH="$HOME/.local/bin:$PATH"'
         if [ -z "$rc" ]; then
           case "${SHELL:-}" in
             */fish) echo "Add it to your PATH:  fish_add_path ~/.local/bin" ;;
             *) echo "Add it to your PATH:  set path = (~/.local/bin \$path)   (in ~/.cshrc or ~/.tcshrc)" ;;
           esac
         elif [ -f "$rc" ] && grep -qF "$mark" "$rc"; then
-          echo "Your PATH line is already in $rc. Open a new terminal, then just type:  thomas ask \"hello\""
-        elif printf '\n%s  %s\n' 'export PATH="$HOME/.local/bin:$PATH"' "$mark" >> "$rc"; then
+          echo "Your PATH line is already in $rc."
+          pathok=1
+        elif printf '\n%s  %s\n' "$path_line" "$mark" >> "$rc"; then
           echo "Added ~/.local/bin to your PATH in $rc (one line, marked \"$mark\")."
-          echo "Open a new terminal, then just type:  thomas ask \"hello\""
+          pathok=1
         else
           echo "Could not write $rc. Add it to your PATH yourself:  export PATH=\"\$HOME/.local/bin:\$PATH\""
+        fi
+        # LAST, and a command that works in THIS window: `curl | sh` runs in a child shell, which cannot change the
+        # PATH of the window it was pasted into, so a bare `thomas` here says "command not found" -- the step
+        # most likely to lose a first-time user; the full link path works
+        # in this window and every later one
+        # the command is the FIRST one `doctor --next` gives this user (sign in, or name the assistant, ...), so pasting
+        # it here is the right next step in every state; the program prints its own name as `thomas` when this window
+        # cannot find it, so the bare word becomes the full link path. If it prints nothing usable, `doctor` itself.
+        nextcmd=$("$link" doctor --next 2>/dev/null | awk '
+          /^Next:/ && !done { if ($0 ~ /:[[:space:]]*$/) { want = 1; next }
+                              n = split($0, a, ":  "); print a[n]; done = 1; exit }
+          want { sub(/^[[:space:]]+/, ""); print; exit }') || nextcmd=""
+        # a path with a space is printed inside single quotes, so the pasted line runs; any other path is printed as it is
+        case "$link" in
+          *" "*) shown="'$link'" ;;
+          *) shown="$link" ;;
+        esac
+        case "$nextcmd" in
+          "") nextcmd="$shown doctor" ;;
+          "thomas "*) nextcmd="$shown ${nextcmd#thomas }" ;;
+        esac
+        echo
+        echo "Type this now, in this same window:  $nextcmd"
+        if [ -n "$pathok" ]; then
+          echo "(In this window keep typing that full path in place of  thomas ; in a NEW terminal window, just  thomas  works.)"
         fi
         ;;
     esac

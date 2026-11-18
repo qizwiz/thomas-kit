@@ -90,14 +90,27 @@ them). Thomas also logs each ask's time, brain, success and character counts, ne
 `~/.thomas/telegram.json`, and the background service writes status lines (never your messages) to
 `~/.thomas/telegram.log`; both are readable only by your user account.
 
+`thomas report` writes a bug report or an idea and prints it; nothing leaves your machine. With `--file` it opens a
+PUBLIC issue on this kit's GitHub repository through your own `gh` login, and anyone can read it. Before it prints or
+files anything, home paths are shortened to `~`: the two segments `/home/NAME` or `/Users` then `/NAME`, wherever they stand
+in a path, with the path before them kept (`/srv/home/sam/x` becomes `/srv/~/x`), and after `file://` too; `/root` is
+shortened only where it starts a path. NAME runs to the next slash or space, and closing punctuation at its very end stays in
+the text; a path is shortened only where NAME has no space (a name with a space is not handled: the part after the space stays). An
+email address, everything around an `@` up to a space, bracket, quote, comma, semicolon or colon when something stands
+before the `@` and a dot after it, is replaced with `<email>`.
+Text in a key format the kit knows is refused, and so is a long random password written as `password=VALUE`.
+A key in a format the kit does not know, a short or word-like password, and a password written inside a sentence are
+NOT refused, so read the printed report before you add `--file`.
+Every report carries a `thomas-version` line, `kit-` and twelve hex characters: a fingerprint of the kit's own program, data and
+settings files, not of any repository.
+
 ## What Thomas may do (all OFF by default; turn on in ~/.thomas/thomas.sexpr)
 
     (brain :autonomy nil :borrow-credentials nil :ledger nil)
 
 - `:autonomy` -- off: the brain runs in its asking mode and Thomas refuses every tool request, so it can answer
-  but not act (Claude only; the free brain never acts either way). On (`t`): the Claude, Codex or Gemini brain may
-  read, write and run commands anywhere your user account can, without asking -- and Codex and Gemini become
-  available.
+  but not act (Claude only; the free brain never acts either way). On (`t`): the Claude, Codex or Gemini brain may read,
+  write and run commands anywhere your user account can, without asking. Codex and Gemini become available.
 - `:borrow-credentials` -- off: the brain sees only your environment (e.g. your own GEMINI_API_KEY). On: it may
   also read a key another app stored (opencode's auth.json).
 - `:ledger` -- off: Thomas keeps no ledger (Claude still saves its usual session transcript under
@@ -108,3 +121,8 @@ them). Thomas also logs each ask's time, brain, success and character counts, ne
 
 It checks the kit against a SHA-256 published alongside it. That catches a corrupted download; it does not
 protect against a compromised host, since both come from the same place. Read `install` before running it.
+
+## License
+
+Apache License 2.0 -- see LICENSE.
+Copyright 2026 Jonathan Hill.
